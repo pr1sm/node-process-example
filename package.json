@@ -1,0 +1,31 @@
+{
+  "name": "process_test",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Srinivas Dhanwada",
+    "email": "dhanwada.dev@gmail.com",
+    "url": "https://github.com/pr1sm"
+  },
+  "private": true,
+  "homepage": "https://github.com/pr1sm/node-process-example",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pr1sm/node-process-example.git"
+  },
+  "scripts": {
+    "start": "node build/index.js",
+    "build": "babel src/ -d build/"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "eslint": "^5.10.0",
+    "eslint-config-prettier": "^3.3.0",
+    "eslint-plugin-prettier": "^3.0.0",
+    "prettier": "^1.15.3"
+  },
+  "dependencies": {
+    "uuid": "^3.3.2"
+  }
+}
