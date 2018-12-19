@@ -104,7 +104,7 @@ class ProcessManager extends Manager {
       });
       console.log(`Runner ${slave.id} Finished without errors`);
     } catch (err) {
-      console.log(`Runner ${slave.id} Finished error: ${err}`);
+      console.log(`Runner ${slave.id} Finished with error: ${err.message}`);
     }
     slave.removeListener('message', doneHandler);
 

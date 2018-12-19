@@ -1,5 +1,3 @@
-const EventEmitter = require('events');
-
 const Runner = require('./runner');
 
 let errorHandlersWired = false;
@@ -30,65 +28,49 @@ function forwardDone(...args) {
   });
 }
 
-function setupPassthroughWiring(runner, events) {
+function setupPassthroughWiring(runner) {
   console.log('Setting up passthrough wiring...');
   // Attach runner handlers to incoming events
-  events.on('abort', runner.handleAbort);
-  events.on('data', runner.handleData);
-
-  // Attach outgoing events to runner events
-  runner.events.on('status', (...args) => {
-    events.emit('status', ...args);
-  });
-  runner.events.on('requestStart', (...args) => {
-    events.emit('requestStart', ...args);
-  });
-  runner.events.on('requestEnd', (...args) => {
-    events.emit('requestEnd', ...args);
-  });
-
-  // Process level wiring...
   process.on('message', ({ target, event, args }) => {
     if (target !== 'slave' || event === '__start') {
       return;
     }
-    // Reemit any events that are targetted for the slave
-    events.emit(event, ...args);
+
+    if (event === 'abort') {
+      runner.handleAbort(...args);
+    } else if (event === 'data') {
+      runner.handleData(...args);
+    }
   });
 
-  const forward = event => (...args) => {
-    process.send({
-      target: 'master',
-      event,
-      args,
+  // Attach outgoing events to runner events
+  ['status', 'requestStart', 'requestEnd'].forEach(event => {
+    runner.events.on(event, (...args) => {
+      process.send({
+        target: 'master',
+        event,
+        args,
+      });
     });
-  };
-
-  ['status', 'requestStart', 'requestEnd'].forEach(ev => {
-    events.on(ev, forward(ev));
   });
 }
 
-function cleanupPassthroughWiring(runner, events) {
+function cleanupPassthroughWiring(runner) {
   console.log('Cleaning up passthrough wiring...');
   // Detach outgoing event from runner events
   runner.events.removeAllListeners();
 
-  // Detach runner handlers from incoming events
-  events.removeAllListeners();
-
-  // TODO: clean up process level wiring...
+  // TODO: clean up process level wiring... is this necessary?
 }
 
 async function _start([rId, payload]) {
-  const events = new EventEmitter();
   const runner = new Runner(rId, payload);
 
-  setupPassthroughWiring(runner, events);
+  setupPassthroughWiring(runner);
 
   await runner.start();
 
-  cleanupPassthroughWiring(runner, events);
+  cleanupPassthroughWiring(runner);
 }
 
 process.on('message', async data => {
